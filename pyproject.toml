@@ -8,6 +8,7 @@ dependencies = [
     "bnlearn>=0.10.2",
     "graphviz>=0.21",
     "gurobipy==11.0.3",
+    "ipykernel>=7.1.0",
     "numba>=0.62.0",
     "numpy>=2.3.3",
     "pandas>=2.3.2",
