@@ -1,7 +1,7 @@
 [project]
-name = "bayesian-structure-learning"
+name = "bn-structure-learning"
 version = "0.1.0"
-description = "Add your description here"
+description = "Repository for bayesian network structure learning"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -19,3 +19,13 @@ dependencies = [
     "pytest>=8.4.2",
     "scikit-learn>=1.7.2",
 ]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+bnsl = "bnsl.cli.main:main"

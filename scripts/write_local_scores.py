@@ -17,5 +17,3 @@ def write_local_scores(dat_path: str, write_path: str):
     )
     
     g.write_local_scores(write_path)
-
-write_local_scores("data/insurance_10000.dat", "local_scores/local_scores_insurance_10000.jaa")

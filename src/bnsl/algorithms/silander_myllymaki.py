@@ -5,18 +5,15 @@ arXiv preprint arXiv:1206.6875.
 """
 
 from itertools import combinations
-from typing import List, Dict, Tuple, FrozenSet, Any, Iterable, Optional, Set
+from typing import List, Dict, FrozenSet, Iterable, Optional, Set
 from pygobnilp.gobnilp import read_local_scores
-
+from bnsl.types import RunResult
 
 def get_best_parents(
-    V:List[str], 
     v:str, 
     LS:Dict[str, Dict[FrozenSet[str], float]])-> Dict[FrozenSet[str], FrozenSet[str]]:
     """
     Implements algorithm 2: GetBestParents
-    
-    V: List of all variable names
     v: The variable for which we want to find the best parents
     LS: Local scores, a map from variable name to scores for parent sets (may be pruned)
     returns: A map from candidate parent sets to the best parents from that set for v
@@ -158,38 +155,33 @@ def ord_2_net(
 
 
 
-def get_optimal_network(path:str) -> Dict[str, Set[str]]:
+def run(path:str) -> Dict[str, Set[str]]:
     """Compute the optimal network using the Silander-Myllymaki algorithm."""
     
     # Step 1: Compute local scores for all (variable, parent set)-pairs
     LS = read_local_scores(path)
     V = list(LS.keys())
 
-    print("Variables:", V)
-    print("Number of variables:", len(V))
-
     #  Step 2: For each variable, find the best parent set and its score
     bps_all: Dict[str, Dict[FrozenSet[str], FrozenSet[str]]] = {}
     for v in V:
-        bps_all[v] = get_best_parents(V, v, LS)
+        bps_all[v] = get_best_parents(v, LS)
 
     # Step 3: Find the best sink for each subset of variables, and the best total score
     sinks = get_best_sinks(V, bps_all, LS)
 
     # Step 4: Extract the optimal order from the best sinks
     order = sinks_2_ord(V, sinks)
-    print("Optimal order:", order)
 
     # Step 5: Extract the optimal network from the optimal order
     parents = ord_2_net(V, order, bps_all) # List of parent sets, where parents[i] is the parent set for order[i]
     
     # Store the result in a dictionary
     parent_dict = {}
+    total_score = 0.0
 
     for var, ps in zip(order, parents):
         parent_dict[var] = ps
-    
-    for var, ps in parent_dict.items():
-        print(f"{var}: {sorted(ps)}")
+        total_score += LS[var].get(frozenset(ps), 0.0)
 
-    return parent_dict
+    return RunResult(pm=parent_dict, total_score=total_score)
