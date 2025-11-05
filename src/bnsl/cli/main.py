@@ -1,7 +1,8 @@
 from __future__ import annotations
-import argparse, json, sys
+import argparse, sys
 from pygobnilp.gobnilp import read_local_scores
 from bnsl.transforms.shifts import get_shift, shifted_scores
+from bnsl.utils.timer import Timer
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Run BNSL algorithms on a .jaa local-scores file")
@@ -17,6 +18,8 @@ def main(argv: list[str] | None = None) -> int:
 
     LS = read_local_scores(args.jaa)
 
+    timer = Timer()
+    timer.start()
     if args.algorithm == "silander_myllymaki":
         from bnsl.algorithms.silander_myllymaki import run
         result = run(args.jaa)
@@ -27,6 +30,8 @@ def main(argv: list[str] | None = None) -> int:
         from bnsl.algorithms.approximation_algorithm import run
         result = run(args.jaa, l=args.l, k=args.k)
 
+    timer.stop()
+    print(f"[{args.algorithm}] elapsed time: {timer.elapsed():.3f} seconds")
     print(f"[{args.algorithm}] score={result.total_score:.3f}")
 
     if args.algorithm == "approximation_algorithm":
