@@ -33,6 +33,7 @@ def test_runresult_match_gobnilp_reference(dat_path, local_scores_path):
     for parent, child in g.learned_bn.edges:
         gob_parents[child].add(parent)
     
+    # find out how to get gobnilp score
     #gob_score = g.learned_bn.score
 
     #assert runresult.total_score == gob_score, "Custom score does not match Gobnilp's score"
