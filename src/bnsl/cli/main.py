@@ -6,6 +6,7 @@ from bnsl.sampling import sample_data
 from bnsl.scoring import write_local_scores, read_local_scores
 from pathlib import Path
 import yaml
+import json
 
 def _write_results_summary(
     algorithm: str,
@@ -14,31 +15,41 @@ def _write_results_summary(
     seconds: float,
     score: float,
     pm: dict[str, set[str]],
-    **kwargs
-) -> Path:
-    """Write experiment metadata to a .txt file inside results/."""
+    **kwargs) -> None:
+    """Write experiment metadata to a .json file inside data/results/."""
 
     write_dir = Path(f"data/results/{algorithm}/")
     write_dir.mkdir(parents=True, exist_ok=True)
 
+    # Build filename based on algorithm and parameters
     if algorithm == "partial_order_approach":
-        file_name = Path(network).stem + f"_m_{kwargs.get('m')}_p_{kwargs.get('p')}_{num_samples}_results.txt"
+        file_name = f"{Path(network).stem}_m_{kwargs.get('m')}_p_{kwargs.get('p')}_{num_samples}_results.json"
     elif algorithm == "approximation_algorithm":
-        file_name = Path(network).stem + f"_k_{kwargs.get('k')}_l_{kwargs.get('l')}_{num_samples}_results.txt"
+        file_name = f"{Path(network).stem}_k_{kwargs.get('k')}_l_{kwargs.get('l')}_{num_samples}_results.json"
     else:
-        file_name = Path(network).stem + f"_{num_samples}_results.txt"
+        file_name = f"{Path(network).stem}_{num_samples}_results.json"
 
-    with open(write_dir / file_name, "w", encoding="utf-8") as f:
-        f.write(f"Network: {network}\n")
-        f.write(f"Number of variables: {len(pm)}\n")
-        f.write(f"Number of samples: {num_samples}\n")
-        f.write(f"Seconds elapsed: {seconds:.3f}\n")
-        f.write(f"Score: {score:.3f}\n")
-        f.write(f"Parent map: {pm}\n")
-        for key, value in kwargs.items():
-            f.write(f"{key}: {value}\n")
-    
-    print(f"[{algorithm}] Results written to {write_dir / file_name}")
+    # Convert frozensets to sorted lists for JSON serialization
+    parent_map = {node: sorted(list(parents)) for node, parents in pm.items()}
+
+    # Build a structured result object
+    result_data = {
+        "network": network,
+        "algorithm": algorithm,
+        "num_variables": len(pm),
+        "num_samples": num_samples,
+        "seconds_elapsed": round(seconds, 3),
+        "score": round(score, 3),
+        "params": kwargs,
+        "parent_map": parent_map,
+    }
+
+    # Write to JSON file
+    output_path = write_dir / file_name
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result_data, f, indent=2, sort_keys=True)
+
+    print(f"[{algorithm}] Results written to {output_path}")
 
 def _single_run(algorithm: str, network: str, num_samples: int,  write_results: bool, **algo_kwargs) -> None:
         # Generate data 
