@@ -1,0 +1,7 @@
+algorithm: approximation_algorithm 
+networks_dir: ["networks/asia", "networks/sachs"]
+sample_sizes: [1000, 5000, 10000]
+k_l_grid:
+  - {k: 4, l: 2}
+  - {k: 3, l: 2}
+  - {k: 5, l: 2}

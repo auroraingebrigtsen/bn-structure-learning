@@ -1,5 +1,5 @@
 import os
-from pygobnilp.gobnilp import Gobnilp
+from pygobnilp.gobnilp import read_local_scores as gob_read_local_scores, Gobnilp
 
 
 def write_local_scores(dat_path: str) -> str:
@@ -35,6 +35,4 @@ def read_local_scores(jaa_path: str) -> dict:
     jaa_path: Path to the .jaa local scores file.
     returns: Local scores dict.
     """
-    g = Gobnilp()
-    LS = g.read_local_scores(jaa_path)
-    return LS
+    return gob_read_local_scores(jaa_path)

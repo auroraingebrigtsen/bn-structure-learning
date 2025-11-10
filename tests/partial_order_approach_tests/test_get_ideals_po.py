@@ -11,11 +11,7 @@ from bnsl.algorithms.partial_order_approach import make_blocks_and_fronts, prede
 
 def get_expected_size_of_ideals(n:int, m: int, p: int) -> int:
     """ Returns the expected number of ideals for given m and p values. """
-    a = ceil(m / 2)
-    b = m - a
-    per_block = (1 << a) + (1 << b) - 1
-    free = n - m * p
-    return (per_block ** p) * (1 << max(free, 0))
+    return NotImplementedError
 
 @pytest.mark.parametrize("n, m, p", [(8, 8, 1), (8, 4, 2), (8, 3, 2), (20, 5, 4), (20, 10, 2)])
 def test_ideals_size(n: int, m: int, p: int):

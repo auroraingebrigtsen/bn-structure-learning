@@ -1,0 +1,35 @@
+# Example configuration file for running BNSL experiments.
+
+# REQUIRED PARAMETERS
+
+# Which algorithm to run. Must be one of:
+#   - "silander_myllymaki"
+#   - "partial_order_approach"
+#   - "approximation_algorithm"
+algorithm: approximation_algorithm
+
+# Either specify a list of individual network files:
+networks:
+  - networks/asia.bif
+  - networks/child.bif
+
+# or give a directory where you want to load all network files from:
+# networks_dir: "networks/"
+
+# Number of samples to generate 
+sample_sizes: [1000, 5000]
+
+
+# OPTIONAL PARAMETERS
+
+# Used only by the approximation algorithm
+# Each entry is a combination of (k, l)
+k_l_grid:
+  - {k: 4, l: 2}
+  - {k: 6, l: 3}
+
+# Used only by the partial order approach
+# Each entry is a combination of (m, p)
+m_p_grid:
+  - {m: 4, p: 2}
+  - {m: 5, p: 3}
