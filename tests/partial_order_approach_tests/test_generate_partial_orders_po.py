@@ -1,11 +1,5 @@
-import sys
-from pathlib import Path
 import pytest
 from math import comb
-
-ROOT = Path(__file__).resolve().parents[2] 
-sys.path.insert(0, str(ROOT))
-
 from bnsl.algorithms.partial_order_approach import generate_partial_orders, make_blocks_and_fronts
 
 def get_expected_size_of_partial_orders(m: int, p: int) -> int:

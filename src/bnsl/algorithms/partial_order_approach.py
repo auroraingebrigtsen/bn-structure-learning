@@ -5,7 +5,7 @@ The Journal of Machine Learning Research, 14(1), pp.1387-1415
 """
 
 from itertools import combinations, product
-from math import ceil
+from math import ceil, comb
 from typing import List, Dict, Tuple, FrozenSet, Iterable, Set
 from pygobnilp.gobnilp import read_local_scores
 from bnsl.types import Edge, RunResult
@@ -213,14 +213,22 @@ def run(local_scores_path: str, m: int = 3, p: int = 2):
 
     blocks, front_choices_per_block, free_block = make_blocks_and_fronts(V, m, p)
 
+    import itertools
+    total_partial_orders = comb(m, m // 2) ** p
+    print(f"[partial_order_approach] Total partial orders to evaluate: {total_partial_orders}")
+
     best_score = float('-inf')
     best_run = None
-
+    
+    checked = 0
     for P in generate_partial_orders(blocks, front_choices_per_block):
         score, run = algorithm1(M, P, LS)
         if score > best_score:
             best_score = score
             best_run = run
+        checked += 1
+        if checked % 100 == 0:
+            print(f"[partial_order_approach] Checked {checked} / {total_partial_orders} partial orders")
 
     pm = reconstruct_parent_map(
         V,
