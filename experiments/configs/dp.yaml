@@ -1,0 +1,5 @@
+algorithm: silander_myllymaki
+networks:
+  - networks/asia.bif
+  - networks/child.bif
+sample_sizes: [1000, 5000, 10000, 100000]
