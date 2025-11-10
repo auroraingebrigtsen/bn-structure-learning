@@ -109,12 +109,12 @@ Algorithms can be run in two ways:
 2.  from the CLI entry point using a YAML-config file, ex.:
 
     ```bash
-    bnsl silander_myllymaki path_to_config
+    bnsl /configs/<config_name>.yml
     ```
 
     To write the results to file, use the argument ``--`write_results```
     ```bash
-    bnsl silander_myllymaki path_to_config --write_results
+    bnsl experiments/configs/<config_name>.yml --write_results
     ```
 
     for more info on args in the entry point use
