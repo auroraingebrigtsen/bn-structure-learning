@@ -61,10 +61,10 @@ def _write_results_summary(
 
     print(f"[{algorithm}] Results written to {output_path}")
 
-def _single_run(algorithm: str, network: str, num_samples: int,  write_results: bool, **algo_kwargs) -> None:
+def _single_run(algorithm: str, network: str, num_samples: int,  write_results: bool, seed: int, **algo_kwargs) -> None:
     """Run a single experiment with the specified parameters."""
     # Generate data 
-    dat_path = sample_data(network, num_samples)
+    dat_path = sample_data(network, num_samples, seed=seed)
     jaa_path = write_local_scores(dat_path)
 
     kwargs = {}
@@ -113,6 +113,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("config", type=str, help="Path to the configuration file (YAML)")
     ap.add_argument("--write_results", action="store_true", help="Whether to write results summary to a file")
     ap.add_argument("--verbose", action="store_true", help="Whether to print current experiment configuration")
+    ap.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
     
     args = ap.parse_args(argv)
 
@@ -146,6 +147,7 @@ def main(argv: list[str] | None = None) -> int:
                         network=network,
                         num_samples=num_samples,
                         write_results=args.write_results,
+                        seed=args.seed,
                         **param_set
                     )
             elif cfg["algorithm"] == "partial_order_approach":
@@ -162,6 +164,7 @@ def main(argv: list[str] | None = None) -> int:
                         network=network,
                         num_samples=num_samples,
                         write_results=args.write_results,
+                        seed=args.seed,
                         **param_set
                     )
             elif cfg["algorithm"] == "silander_myllymaki":
@@ -175,6 +178,7 @@ def main(argv: list[str] | None = None) -> int:
                     algorithm=cfg["algorithm"],
                     network=network,
                     num_samples=num_samples,
+                    seed=args.seed,
                     write_results=args.write_results
                 )
             else:
