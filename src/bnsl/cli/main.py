@@ -8,6 +8,16 @@ from pathlib import Path
 import yaml
 import json
 
+def _print_current(algorithm: str, network: str, num_samples: int, **kwargs) -> None:
+    """Print the current experiment configuration to the console."""
+    print(f"\n-------------------------------------")
+    print(f"Running {algorithm}:")
+    print(f"-------------------------------------")
+    print(f"Network: {network}")
+    print(f"Num samples: {num_samples}")
+    print(f"Parameters: {kwargs}")
+    
+
 def _write_results_summary(
     algorithm: str,
     network: str,
@@ -52,7 +62,8 @@ def _write_results_summary(
     print(f"[{algorithm}] Results written to {output_path}")
 
 def _single_run(algorithm: str, network: str, num_samples: int,  write_results: bool, **algo_kwargs) -> None:
-        # Generate data 
+    """Run a single experiment with the specified parameters."""
+    # Generate data 
     dat_path = sample_data(network, num_samples)
     jaa_path = write_local_scores(dat_path)
 
@@ -84,9 +95,6 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
     else:
         score = result.total_score
 
-    for v in result.pm:
-        print(f"  {v}: {result.pm[v]}")
-
     if write_results:
         _write_results_summary(
             algorithm=algorithm,
@@ -104,6 +112,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Run BNSL algorithms on a .jaa local-scores file")
     ap.add_argument("config", type=str, help="Path to the configuration file (YAML)")
     ap.add_argument("--write_results", action="store_true", help="Whether to write results summary to a file")
+    ap.add_argument("--verbose", action="store_true", help="Whether to print current experiment configuration")
     
     args = ap.parse_args(argv)
 
@@ -125,6 +134,13 @@ def main(argv: list[str] | None = None) -> int:
         for num_samples in cfg.get("sample_sizes", [10000]):
             if cfg["algorithm"] == "approximation_algorithm":
                 for param_set in cfg.get("k_l_grid", [{"k":4, "l":2}]):
+                    if args.verbose:
+                        _print_current(
+                            algorithm=cfg["algorithm"],
+                            network=network,
+                            num_samples=num_samples,
+                            **param_set
+                        )
                     _single_run(
                         algorithm=cfg["algorithm"],
                         network=network,
@@ -134,6 +150,13 @@ def main(argv: list[str] | None = None) -> int:
                     )
             elif cfg["algorithm"] == "partial_order_approach":
                 for param_set in cfg.get("m_p_grid", [{"m":3, "p":2}]):
+                    if args.verbose:
+                        _print_current(
+                            algorithm=cfg["algorithm"],
+                            network=network,
+                            num_samples=num_samples,
+                            **param_set
+                        )
                     _single_run(
                         algorithm=cfg["algorithm"],
                         network=network,
@@ -142,6 +165,12 @@ def main(argv: list[str] | None = None) -> int:
                         **param_set
                     )
             elif cfg["algorithm"] == "silander_myllymaki":
+                if args.verbose:
+                    _print_current(
+                        algorithm=cfg["algorithm"],
+                        network=network,
+                        num_samples=num_samples
+                    )
                 _single_run(
                     algorithm=cfg["algorithm"],
                     network=network,
