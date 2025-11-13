@@ -10,14 +10,13 @@ algorithm: approximation_algorithm
 
 # Either specify a list of individual network files:
 networks:
-  - networks/asia.bif
-  - networks/child.bif
+  - networks/mildew.bif
 
 # or give a directory where you want to load all network files from:
 # networks_dir: "networks/"
 
 # Number of samples to generate 
-sample_sizes: [1000, 5000]
+sample_sizes: [1000, 5000, 10000, 100000]
 
 
 # OPTIONAL PARAMETERS
@@ -26,7 +25,7 @@ sample_sizes: [1000, 5000]
 # Each entry is a combination of (k, l)
 k_l_grid:
   - {k: 4, l: 2}
-  - {k: 6, l: 3}
+  - {k: 6, l: 1}
 
 # Used only by the partial order approach
 # Each entry is a combination of (m, p)

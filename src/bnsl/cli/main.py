@@ -22,6 +22,7 @@ def _write_results_summary(
     algorithm: str,
     network: str,
     num_samples: int,
+    seed: int,
     seconds: float,
     score: float,
     pm: dict[str, set[str]],
@@ -48,6 +49,7 @@ def _write_results_summary(
         "algorithm": algorithm,
         "num_variables": len(pm),
         "num_samples": num_samples,
+        "seed": seed,
         "seconds_elapsed": round(seconds, 3),
         "score": round(score, 3),
         "params": kwargs,
@@ -83,6 +85,7 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
         from bnsl.algorithms.approximation_algorithm import run
         result = run(jaa_path, l=algo_kwargs.get("l"), k=algo_kwargs.get("k"))
         kwargs.update({"l": algo_kwargs.get("l"), "k": algo_kwargs.get("k")})
+        
 
     timer.stop()
     print(f"[{algorithm}] elapsed time: {timer.elapsed():.3f} seconds")
@@ -100,6 +103,7 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
             algorithm=algorithm,
             network=network,
             num_samples=num_samples,
+            seed=seed,
             seconds=timer.elapsed(),
             score=score,
             pm=result.pm,
