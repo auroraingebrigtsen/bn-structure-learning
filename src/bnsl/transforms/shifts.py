@@ -12,11 +12,11 @@ def get_shift(LS: Dict[str, Dict[FrozenSet[str], float]]):
                 lowest_score = score
     return -lowest_score
 
-def shifted_scores(shift: float, n: int, raw_score: float, approximation_ratio: float) -> tuple[float, float]:
+def get_upper_bound(shift: float, n: int, raw_score: float, alpha: float) -> float:
     """
-    Function to compute the final score after shifting back by removing the shift
-    contributions from each variable.
+    Function to compute the theoretical optimal upper bound 
+    Alpha= = l/k
     """
-    shifted_final = raw_score - (n * shift)
-    shifted_optimal = raw_score * approximation_ratio - (n * shift)
-    return shifted_final, shifted_optimal
+    g_alg = raw_score + n * shift
+    g_opt_ub = alpha * g_alg
+    return g_opt_ub - n * shift

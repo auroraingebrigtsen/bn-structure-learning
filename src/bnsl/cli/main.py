@@ -1,8 +1,8 @@
 from __future__ import annotations
 import argparse, sys
-from bnsl.transforms.shifts import get_shift, shifted_scores
 from bnsl.utils.timer import Timer
 from bnsl.sampling import sample_data
+from bnsl.transforms.shifts import get_shift, get_upper_bound
 from bnsl.scoring import write_local_scores, read_local_scores
 from pathlib import Path
 import yaml
@@ -34,12 +34,11 @@ def _write_results_summary(
 
     # Build filename based on algorithm and parameters
     if algorithm == "partial_order_approach":
-        file_name = f"{Path(network).stem}_m_{kwargs.get('m')}_p_{kwargs.get('p')}_{num_samples}_results.json"
+        file_name = f"{Path(network).stem}_m_{kwargs.get('m')}_p_{kwargs.get('p')}_{num_samples}_seed_{seed}_results.json"
     elif algorithm == "approximation_algorithm":
-        file_name = f"{Path(network).stem}_k_{kwargs.get('k')}_l_{kwargs.get('l')}_{num_samples}_results.json"
+        file_name = f"{Path(network).stem}_k_{kwargs.get('k')}_l_{kwargs.get('l')}_{num_samples}_seed_{seed}_results.json"
     else:
-        file_name = f"{Path(network).stem}_{num_samples}_results.json"
-
+        file_name = f"{Path(network).stem}_{num_samples}_seed_{seed}_results.json"
     # Convert frozensets to sorted lists for JSON serialization
     parent_map = {node: sorted(list(parents)) for node, parents in pm.items()}
 
@@ -86,17 +85,14 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
         result = run(jaa_path, l=algo_kwargs.get("l"), k=algo_kwargs.get("k"))
         kwargs.update({"l": algo_kwargs.get("l"), "k": algo_kwargs.get("k")})
         
+    if algorithm == "approximation_algorithm":
+        shift = get_shift(LS)
+        optimal_upper_bound = get_upper_bound(shift, len(result.pm), result.total_score, algo_kwargs.get("k") / algo_kwargs.get("l"))
+        kwargs.update({"optimal_upper_bound": optimal_upper_bound})
 
     timer.stop()
     print(f"[{algorithm}] elapsed time: {timer.elapsed():.3f} seconds")
     print(f"[{algorithm}] score={result.total_score:.3f}")
-
-    if algorithm == "approximation_algorithm":
-        shift = get_shift(LS)
-        score, shifted_optimal = shifted_scores(shift, len(result.pm), result.total_score, algo_kwargs.get("l") / algo_kwargs.get("k"))
-        kwargs.update({"shifted_optimal": shifted_optimal})
-    else:
-        score = result.total_score
 
     if write_results:
         _write_results_summary(
@@ -105,7 +101,7 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
             num_samples=num_samples,
             seed=seed,
             seconds=timer.elapsed(),
-            score=score,
+            score=result.total_score,
             pm=result.pm,
             **kwargs
         )
@@ -117,7 +113,6 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("config", type=str, help="Path to the configuration file (YAML)")
     ap.add_argument("--write_results", action="store_true", help="Whether to write results summary to a file")
     ap.add_argument("--verbose", action="store_true", help="Whether to print current experiment configuration")
-    ap.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
     
     args = ap.parse_args(argv)
 
@@ -135,58 +130,59 @@ def main(argv: list[str] | None = None) -> int:
         p = Path(networks_dir)
         networks.extend([str(f) for f in p.glob("*.bif")])
     
-    for network in networks:
-        for num_samples in cfg.get("sample_sizes", [10000]):
-            if cfg["algorithm"] == "approximation_algorithm":
-                for param_set in cfg.get("k_l_grid", [{"k":4, "l":2}]):
+    for seed in cfg.get("seed", [42]):
+        for network in networks:
+            for num_samples in cfg.get("sample_sizes", [10000]):
+                if cfg["algorithm"] == "approximation_algorithm":
+                    for param_set in cfg.get("k_l_grid", [{"k":4, "l":2}]):
+                        if args.verbose:
+                            _print_current(
+                                algorithm=cfg["algorithm"],
+                                network=network,
+                                num_samples=num_samples,
+                                **param_set
+                            )
+                        _single_run(
+                            algorithm=cfg["algorithm"],
+                            network=network,
+                            num_samples=num_samples,
+                            write_results=args.write_results,
+                            seed=seed,
+                            **param_set
+                        )
+                elif cfg["algorithm"] == "partial_order_approach":
+                    for param_set in cfg.get("m_p_grid", [{"m":3, "p":2}]):
+                        if args.verbose:
+                            _print_current(
+                                algorithm=cfg["algorithm"],
+                                network=network,
+                                num_samples=num_samples,
+                                **param_set
+                            )
+                        _single_run(
+                            algorithm=cfg["algorithm"],
+                            network=network,
+                            num_samples=num_samples,
+                            write_results=args.write_results,
+                            seed=seed,
+                            **param_set
+                        )
+                elif cfg["algorithm"] == "silander_myllymaki":
                     if args.verbose:
                         _print_current(
                             algorithm=cfg["algorithm"],
                             network=network,
-                            num_samples=num_samples,
-                            **param_set
+                            num_samples=num_samples
                         )
                     _single_run(
                         algorithm=cfg["algorithm"],
                         network=network,
                         num_samples=num_samples,
-                        write_results=args.write_results,
-                        seed=args.seed,
-                        **param_set
+                        seed=seed,
+                        write_results=args.write_results
                     )
-            elif cfg["algorithm"] == "partial_order_approach":
-                for param_set in cfg.get("m_p_grid", [{"m":3, "p":2}]):
-                    if args.verbose:
-                        _print_current(
-                            algorithm=cfg["algorithm"],
-                            network=network,
-                            num_samples=num_samples,
-                            **param_set
-                        )
-                    _single_run(
-                        algorithm=cfg["algorithm"],
-                        network=network,
-                        num_samples=num_samples,
-                        write_results=args.write_results,
-                        seed=args.seed,
-                        **param_set
-                    )
-            elif cfg["algorithm"] == "silander_myllymaki":
-                if args.verbose:
-                    _print_current(
-                        algorithm=cfg["algorithm"],
-                        network=network,
-                        num_samples=num_samples
-                    )
-                _single_run(
-                    algorithm=cfg["algorithm"],
-                    network=network,
-                    num_samples=num_samples,
-                    seed=args.seed,
-                    write_results=args.write_results
-                )
-            else:
-                raise ValueError(f"Unknown algorithm: {cfg['algorithm']}")
+                else:
+                    raise ValueError(f"Unknown algorithm: {cfg['algorithm']}")
 
 if __name__ == "__main__":
     sys.exit(main())

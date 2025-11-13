@@ -8,7 +8,6 @@ from typing import Iterable, List, FrozenSet, Set
 from pygobnilp.gobnilp import read_local_scores
 from itertools import combinations
 from bnsl.types import Edge, RunResult
-from bnsl.transforms.shifts import get_shift, shifted_scores
 from bnsl.transforms.downwards_close import downwards_close
 from bnsl.algorithms.partial_order_approach import algorithm1, reconstruct_parent_map
 

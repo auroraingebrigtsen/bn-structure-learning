@@ -32,3 +32,5 @@ k_l_grid:
 m_p_grid:
   - {m: 4, p: 2}
   - {m: 5, p: 3}
+
+seed: [42]
