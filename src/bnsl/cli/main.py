@@ -26,6 +26,7 @@ def _write_results_summary(
     seconds: float,
     score: float,
     pm: dict[str, set[str]],
+    bounds: dict[str, float],
     **kwargs) -> None:
     """Write experiment metadata to a .json file inside data/results/."""
 
@@ -53,6 +54,7 @@ def _write_results_summary(
         "score": round(score, 3),
         "params": kwargs,
         "parent_map": parent_map,
+        "bounds": bounds,
     }
 
     # Write to JSON file
@@ -62,15 +64,21 @@ def _write_results_summary(
 
     print(f"[{algorithm}] Results written to {output_path}")
 
-def _single_run(algorithm: str, network: str, num_samples: int,  write_results: bool, seed: int, **algo_kwargs) -> None:
+def _single_run(algorithm: str, network: str, num_samples: int,  write_results: bool, seed: int, jaa_path: str=None, **algo_kwargs) -> None:
     """Run a single experiment with the specified parameters."""
     # Generate data 
-    dat_path = sample_data(network, num_samples, seed=seed)
-    jaa_path = write_local_scores(dat_path)
+    if not jaa_path:
+        dat_path = sample_data(network, num_samples, seed=seed)
+        jaa_path = write_local_scores(dat_path)
 
     kwargs = {}
 
     LS = read_local_scores(jaa_path)
+
+    bounds = {}
+    naive_ub = sum(max(scores.values()) for scores in LS.values())
+    bounds["naive_upper_bound"] = round(naive_ub, 3)
+
     timer = Timer()
     timer.start()
     if algorithm == "silander_myllymaki":
@@ -87,8 +95,8 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
         
     if algorithm == "approximation_algorithm":
         shift = get_shift(LS)
-        optimal_upper_bound = get_upper_bound(shift, len(result.pm), result.total_score, algo_kwargs.get("k") / algo_kwargs.get("l"))
-        kwargs.update({"optimal_upper_bound": optimal_upper_bound})
+        theoretical_upper_bound = get_upper_bound(shift, len(result.pm), result.total_score, algo_kwargs.get("k") / algo_kwargs.get("l"))
+        bounds["theoretical_upper_bound"] = round(theoretical_upper_bound, 3)
 
     timer.stop()
     print(f"[{algorithm}] elapsed time: {timer.elapsed():.3f} seconds")
@@ -103,10 +111,17 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
             seconds=timer.elapsed(),
             score=result.total_score,
             pm=result.pm,
+            bounds=bounds,
             **kwargs
         )
 
-
+def _get_cfg_from_jaa(path: str) -> str:
+    """Extract the network name and sample size from a given file path."""
+    p = Path(path)
+    parts = p.stem.split("_")
+    network_name = parts[0]
+    sample_size = int(parts[-1])
+    return network_name, sample_size
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Run BNSL algorithms on a .jaa local-scores file")
@@ -120,6 +135,30 @@ def main(argv: list[str] | None = None) -> int:
         cfg = yaml.safe_load(f) or {}
 
     assert "algorithm" in cfg, "Configuration file must specify 'algorithm'"
+
+    if cfg.get("local_scores", None) is not None:
+        network, num_samples = _get_cfg_from_jaa(cfg["local_scores"])
+        if cfg["algorithm"] == "approximation_algorithm":
+            param_set = cfg.get("k_l_grid", [{"k":4, "l":2}])[0]
+        if args.verbose:
+            print("Running from provided .jaa local-scores file:")
+            _print_current(
+                algorithm=cfg["algorithm"],
+                network=network,
+                num_samples=num_samples,
+                **param_set
+            )
+        _single_run(
+            algorithm=cfg["algorithm"],
+            network=network,
+            num_samples=num_samples,
+            write_results=args.write_results,
+            seed=cfg.get("seed", 42),
+            jaa_path=cfg["local_scores"],
+            **param_set
+        )
+        return 
+
     assert "networks" in cfg or "networks_dir" in cfg, "Configuration file must specify 'networks' or 'networks_dir'"
 
     networks = []
