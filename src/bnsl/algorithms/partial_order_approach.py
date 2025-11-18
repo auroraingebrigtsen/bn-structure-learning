@@ -22,11 +22,10 @@ def make_blocks_and_fronts(
     """
     a = ceil(m / 2)  # front bucket size
     blocks: List[Set[str]] = [set(V[i * m : (i + 1) * m]) for i in range(p)]
-    free_block = V[p * m :]
     front_choices_per_block: List[List[Set[str]]] = [
         [set(F) for F in combinations(block, a)] for block in blocks
     ]
-    return blocks, front_choices_per_block, free_block
+    return blocks, front_choices_per_block
 
 def generate_partial_orders(
     blocks: List[Set[str]],
@@ -211,24 +210,19 @@ def run(local_scores_path: str, m: int = 3, p: int = 2):
     assert p * m <= n
     assert m >= 2 and p >= 1
 
-    blocks, front_choices_per_block, free_block = make_blocks_and_fronts(V, m, p)
+    blocks, front_choices_per_block = make_blocks_and_fronts(V, m, p)
 
-    import itertools
     total_partial_orders = comb(m, m // 2) ** p
     print(f"[partial_order_approach] Total partial orders to evaluate: {total_partial_orders}")
 
     best_score = float('-inf')
     best_run = None
     
-    checked = 0
     for P in generate_partial_orders(blocks, front_choices_per_block):
         score, run = algorithm1(M, P, LS)
         if score > best_score:
             best_score = score
             best_run = run
-        checked += 1
-        if checked % 100 == 0:
-            print(f"[partial_order_approach] Checked {checked} / {total_partial_orders} partial orders")
 
     pm = reconstruct_parent_map(
         V,
