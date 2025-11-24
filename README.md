@@ -119,7 +119,7 @@ Algorithms can be run in two ways:
 
     for more info on args in the entry point use
     ```bash
-    uv run bnsl --help
+    bnsl --help
     ```
 
     An example of a config can be found in `experiments/configs/example_config.py`

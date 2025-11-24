@@ -19,6 +19,7 @@ def _print_current(algorithm: str, network: str, num_samples: int, **kwargs) -> 
     
 
 def _write_results_summary(
+    write_path: str,
     algorithm: str,
     network: str,
     num_samples: int,
@@ -30,7 +31,7 @@ def _write_results_summary(
     **kwargs) -> None:
     """Write experiment metadata to a .json file inside data/results/."""
 
-    write_dir = Path(f"data/results/{algorithm}/")
+    write_dir = Path(write_path)
     write_dir.mkdir(parents=True, exist_ok=True)
 
     # Build filename based on algorithm and parameters
@@ -64,7 +65,7 @@ def _write_results_summary(
 
     print(f"[{algorithm}] Results written to {output_path}")
 
-def _single_run(algorithm: str, network: str, num_samples: int,  write_results: bool, seed: int, jaa_path: str=None, **algo_kwargs) -> None:
+def _single_run(algorithm: str, network: str, num_samples: int,  write_path: str, seed: int, jaa_path: str=None, **algo_kwargs) -> None:
     """Run a single experiment with the specified parameters."""
     # Generate data 
     if not jaa_path:
@@ -102,8 +103,9 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
     print(f"[{algorithm}] elapsed time: {timer.elapsed():.3f} seconds")
     print(f"[{algorithm}] score={result.total_score:.3f}")
 
-    if write_results:
+    if write_path:
         _write_results_summary(
+            write_path=write_path,
             algorithm=algorithm,
             network=network,
             num_samples=num_samples,
@@ -115,7 +117,7 @@ def _single_run(algorithm: str, network: str, num_samples: int,  write_results: 
             **kwargs
         )
 
-def _get_cfg_from_jaa(path: str) -> str:
+def _get_cfg_from_jaa(path: str) -> tuple[str, int]:
     """Extract the network name and sample size from a given file path."""
     p = Path(path)
     parts = p.stem.split("_")
@@ -126,7 +128,7 @@ def _get_cfg_from_jaa(path: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Run BNSL algorithms on a .jaa local-scores file")
     ap.add_argument("config", type=str, help="Path to the configuration file (YAML)")
-    ap.add_argument("--write_results", action="store_true", help="Whether to write results summary to a file")
+    ap.add_argument("--write_path",type=str,default=None, help="Directory where result summaries should be written (optional)",)
     ap.add_argument("--verbose", action="store_true", help="Whether to print current experiment configuration")
     
     args = ap.parse_args(argv)
@@ -135,31 +137,60 @@ def main(argv: list[str] | None = None) -> int:
         cfg = yaml.safe_load(f) or {}
 
     assert "algorithm" in cfg, "Configuration file must specify 'algorithm'"
+    assert "networks" in cfg or "networks_dir" in cfg or "local_scores" in cfg or "local_scores_dir" in cfg, "Configuration file must specify some networks or local_scores"
 
-    if cfg.get("local_scores", None) is not None:
-        network, num_samples = _get_cfg_from_jaa(cfg["local_scores"])
-        if cfg["algorithm"] == "approximation_algorithm":
-            param_set = cfg.get("k_l_grid", [{"k":4, "l":2}])[0]
-        if args.verbose:
-            print("Running from provided .jaa local-scores file:")
-            _print_current(
-                algorithm=cfg["algorithm"],
-                network=network,
-                num_samples=num_samples,
-                **param_set
-            )
-        _single_run(
-            algorithm=cfg["algorithm"],
-            network=network,
-            num_samples=num_samples,
-            write_results=args.write_results,
-            seed=cfg.get("seed", 42),
-            jaa_path=cfg["local_scores"],
-            **param_set
-        )
-        return 
+    seed_cfg = cfg.get("seed", 42)
+    if isinstance(seed_cfg, int):
+        seeds = [seed_cfg]
+    else:
+        seeds = list(seed_cfg)
 
-    assert "networks" in cfg or "networks_dir" in cfg, "Configuration file must specify 'networks' or 'networks_dir'"
+    local_scores = []
+    if "local_scores" in cfg:
+        assert isinstance(cfg["local_scores"], str), "'local_scores' must be a string. Use 'local_scores_dir' for multiple files."
+        local_scores.append(cfg["local_scores"])
+    elif "local_scores_dir" in cfg:
+        local_scores_dir = cfg["local_scores_dir"]
+        p = Path(local_scores_dir)
+        local_scores.extend([str(f) for f in p.glob("*.jaa")])
+
+    if len(local_scores) > 0:
+        algo = cfg["algorithm"]
+
+        if algo == "approximation_algorithm":
+            param_grid = cfg.get("k_l_grid", [{"k": 4, "l": 2}])
+        elif algo == "partial_order_approach":
+            param_grid = cfg.get("m_p_grid", [{"m": 3, "p": 2}])
+        elif algo == "silander_myllymaki":
+            # no extra params
+            param_grid = [dict()]
+        else:
+            raise ValueError(f"Unknown algorithm: {algo}")
+
+        for jaa_path in local_scores:
+            network, num_samples = _get_cfg_from_jaa(jaa_path)
+
+            for seed in seeds:
+                for param_set in param_grid:
+                    if args.verbose:
+                        _print_current(
+                            algorithm=algo,
+                            network=network,
+                            num_samples=num_samples,
+                            **param_set,
+                        )
+
+                    _single_run(
+                        algorithm=algo,
+                        network=network,
+                        num_samples=num_samples,
+                        write_path=args.write_path,
+                        seed=seed,
+                        jaa_path=jaa_path, 
+                        **param_set,
+                    )
+
+        return
 
     networks = []
     if "networks" in cfg:
@@ -169,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
         p = Path(networks_dir)
         networks.extend([str(f) for f in p.glob("*.bif")])
     
-    for seed in cfg.get("seed", [42]):
+    for seed in seeds:
         for network in networks:
             for num_samples in cfg.get("sample_sizes", [10000]):
                 if cfg["algorithm"] == "approximation_algorithm":
@@ -185,7 +216,7 @@ def main(argv: list[str] | None = None) -> int:
                             algorithm=cfg["algorithm"],
                             network=network,
                             num_samples=num_samples,
-                            write_results=args.write_results,
+                            write_path=args.write_path,
                             seed=seed,
                             **param_set
                         )
@@ -202,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
                             algorithm=cfg["algorithm"],
                             network=network,
                             num_samples=num_samples,
-                            write_results=args.write_results,
+                            write_path=args.write_path,
                             seed=seed,
                             **param_set
                         )
@@ -218,7 +249,7 @@ def main(argv: list[str] | None = None) -> int:
                         network=network,
                         num_samples=num_samples,
                         seed=seed,
-                        write_results=args.write_results
+                        write_path=args.write_path
                     )
                 else:
                     raise ValueError(f"Unknown algorithm: {cfg['algorithm']}")
