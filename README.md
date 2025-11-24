@@ -97,7 +97,8 @@ The following algorithms are located in the  `bnsl.algorithms`-module:
 ### Data and Scores
 This project **does not** implement score computation directly, instead we rely on [`pygobnilp`](https://bitbucket.org/jamescussens/pygobnilp/src/master/) to calculate local scores. All scoring related logic can be found in  `src/bnsl/scoring.py`. To change scoring method refer to this file. Pygobnilp uses **Jaakkola local-scores files** for storing local scores, see the section [Interpreting Jaakkola local-scores file](#interpreting-jaakkola-local-scores-file-jaa-files) for details. 
 
- The data itself can be sampled from `src/bnsl/sampling.py`. The function `sample_data` takes the path to a .bif network, and generates `n_samples` from this network. The data is then stored as a .dat file in `data/datasets`
+ The data itself can be sampled from `src/bnsl/sampling.py`. The function `sample_data` takes the path to a .bif network, and generates `n_samples` from this network. The data is then stored as a .dat file in `data/datasets`.
+ It is also possible to use existing `.jaa` files, and thus skip sampling and local score generation.
 
 ### Running the project
 Algorithms can be run in two ways: 
@@ -112,7 +113,7 @@ Algorithms can be run in two ways:
     bnsl /configs/<config_name>.yml
     ```
 
-    To write the results to file, use the argument ``--`write_results```
+    To write the results to file, use the argument ````--write_path``` to specify a store location.
     ```bash
     bnsl experiments/configs/<config_name>.yml --write_results
     ```

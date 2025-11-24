@@ -15,7 +15,11 @@ networks:
 # or give a directory where you want to load all network files from:
 # networks_dir: "networks/"
 
-# Number of samples to generate 
+# Alternatively , you can specify a path or a directory of local scores:
+# local_scores: data/local_scores/mildew.csv
+# local_scores_dir: data/local_scores/
+
+# Number of samples to generate (not used if local scores are provided)
 sample_sizes: [1000, 5000, 10000, 100000]
 
 
@@ -33,4 +37,5 @@ m_p_grid:
   - {m: 4, p: 2}
   - {m: 5, p: 3}
 
+# Random seeds for sampling, if several, each experiment is repeated for each seed
 seed: [42]
