@@ -217,6 +217,4 @@ __marimo__/
 .vs/
 .vscode/
 
-# Bayesian Structure Learning
-/local_scores
 /data
