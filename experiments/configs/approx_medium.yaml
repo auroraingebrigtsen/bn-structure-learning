@@ -5,4 +5,4 @@ k_l_grid:
   - {k: 4, l: 3}
   - {k: 5, l: 4}
 seed: [42, 43, 44]
-local_scores_dir: data/local_scores/medium/
+local_scores_dir: insurance
