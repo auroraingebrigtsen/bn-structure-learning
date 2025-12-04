@@ -23,7 +23,7 @@ def compute_shd(network_path: str, pm_learned: Dict[str, Set[str]]) -> int:
     bnlearn = rpackages.importr("bnlearn")
     base = rpackages.importr("base")
 
-    nodes = sorted({x for (x, _) in true_edges} | {y for (_, y) in true_edges})
+    nodes = sorted({u for (u, _) in true_edges} | {v for (_, v) in true_edges})
 
     ro.globalenv["true_nodes"] = ro.StrVector(nodes)
     ro.globalenv["true_from"] = ro.StrVector([u for u, v in true_edges])
