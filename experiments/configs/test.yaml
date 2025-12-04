@@ -1,5 +1,0 @@
-algorithm: approximation_algorithm 
-local_scores: data/local_scores/hailfinder_1000.jaa
-seed: [42]
-k_l_grid:
-  - {k: 6, l: 2}

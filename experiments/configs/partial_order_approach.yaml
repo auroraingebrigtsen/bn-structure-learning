@@ -1,0 +1,7 @@
+algorithm: partial_order_approach
+networks: 
+- networks/small/asia.bif
+m_p_grid:
+  - {m: 4, p: 2}
+sample_sizes: [100, 1000, 10000]
+seed: [42, 43, 44]

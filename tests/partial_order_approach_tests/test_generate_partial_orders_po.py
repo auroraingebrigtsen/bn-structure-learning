@@ -11,7 +11,7 @@ def test_partial_orders_size(n: int, m: int, p: int):
     """Test that the number of generated partial orders matches the theoretical count."""
     V = [f"{i}" for i in range(n)]
 
-    blocks, front_choices_per_block, _ = make_blocks_and_fronts(V, m, p)
+    blocks, front_choices_per_block = make_blocks_and_fronts(V, m, p)
 
     count = sum(1 for _ in generate_partial_orders(blocks, front_choices_per_block))
     expected_size = get_expected_size_of_partial_orders(m, p)

@@ -131,7 +131,7 @@ def algorithm1(
                 best_score = score
                 best_choice = Y_minus_v
         g_p[Y] = best_score  # best score for ideal Y
-        prev[Y] = best_choice  #
+        prev[Y] = best_choice 
 
         # 3b: local DP over tail for each v ∈ Y
         for v in M: 

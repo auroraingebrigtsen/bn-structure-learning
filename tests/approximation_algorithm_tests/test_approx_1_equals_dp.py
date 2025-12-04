@@ -13,7 +13,7 @@ network_paths = list((ROOT / "networks" / "small").glob("*.bif"))
 
 @pytest.mark.slow
 @pytest.mark.parametrize("network_path", network_paths)
-def test_approx_equals_dp(network_path):
+def test_approx_1_equals_dp(network_path):
     dat = sample_data(network_path, n_samples=10000, seed=42)
     jaa = write_local_scores(dat)
     runresult_dp = run_sm(jaa)

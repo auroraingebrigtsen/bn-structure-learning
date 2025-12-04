@@ -41,7 +41,7 @@ def compute_shd(network_path: str, pm_learned: Dict[str, Set[str]]) -> int:
         arcs(learned_dag) <- data.frame(from=learn_from, to=learn_to)
 
         # CPDAG-based SHD (default behaviour)
-        shd(true_dag, learned_dag, debug=TRUE)
+        shd(true_dag, learned_dag)
     """)
 
     return int(shd_value[0])
