@@ -1,5 +1,5 @@
 algorithm: approximation_algorithm 
 k_l_grid:
-  - {k: 2, l: 1}
+  - {k: 8, l: 2}
 seed: [42, 43, 44]
 local_scores_dir: data/local_scores/large/
