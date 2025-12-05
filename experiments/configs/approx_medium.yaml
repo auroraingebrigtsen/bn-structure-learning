@@ -5,4 +5,4 @@ k_l_grid:
   - {k: 7, l: 4}
   - {k: 8, l: 5}
 seed: [42, 43, 44]
-local_scores_dir: child
+local_scores_dir: data/local_scores/alarm/
