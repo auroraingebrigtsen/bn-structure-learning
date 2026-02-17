@@ -1,6 +1,8 @@
 # bn-structure-learning
 
-Implementations of different BN structure learning algorithms.
+Implementations and empirical comparisons of Bayesian network (BN) structure learning algorithms.
+
+This repository was developed as part of a research assistant position at the University of Bergen (UiB). The primary goal is to evaluate the approximation algorithm proposed in \emph{Time--Approximation Trade-Offs for Learning Bayesian Networks}. For further details, see the report \texttt{BNSL\_project.pdf}.
 
 ## Getting Started
 The project requires that you have [`uv`](https://docs.astral.sh/uv/) installed.
